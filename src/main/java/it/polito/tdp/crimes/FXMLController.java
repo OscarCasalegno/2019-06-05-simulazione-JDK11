@@ -47,6 +47,14 @@ public class FXMLController {
 
 	@FXML
 	void doCreaReteCittadina(ActionEvent event) {
+		this.txtResult.clear();
+		Integer year = this.boxAnno.getValue();
+		if (year == null) {
+			this.txtResult.appendText("Scegliere un anno");
+			return;
+		}
+
+		this.model.createGraph(year);
 
 	}
 

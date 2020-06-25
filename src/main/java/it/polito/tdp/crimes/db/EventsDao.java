@@ -7,6 +7,9 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.javadocmd.simplelatlng.LatLng;
+
+import it.polito.tdp.crimes.model.Coord;
 import it.polito.tdp.crimes.model.Event;
 
 public class EventsDao {
@@ -59,10 +62,41 @@ public class EventsDao {
 
 			while (res.next()) {
 				try {
-					list.add(res.getInt(""));
+					list.add(res.getInt("anno"));
 				} catch (Throwable t) {
 					t.printStackTrace();
-					System.out.println(res.getInt("anno"));
+				}
+			}
+
+			conn.close();
+			return list;
+
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			return null;
+		}
+	}
+
+	public static List<Coord> getDistrictCoordByYear(Integer year) {
+		String sql = "SELECT district_id as id, AVG(geo_lon) as lon, AVG(geo_lat) as lat " + "FROM `events` "
+				+ "WHERE YEAR(reported_date) = ? " + "GROUP BY district_id";
+		try {
+			Connection conn = DBConnect.getConnection();
+
+			PreparedStatement st = conn.prepareStatement(sql);
+
+			st.setInt(1, year);
+
+			List<Coord> list = new ArrayList<>();
+
+			ResultSet res = st.executeQuery();
+
+			while (res.next()) {
+				try {
+					list.add(new Coord(res.getInt("id"), new LatLng(res.getDouble("lat"), res.getDouble("lon"))));
+				} catch (Throwable t) {
+					t.printStackTrace();
 				}
 			}
 

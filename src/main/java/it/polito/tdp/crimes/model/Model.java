@@ -1,6 +1,9 @@
 package it.polito.tdp.crimes.model;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.jgrapht.Graph;
 import org.jgrapht.graph.DefaultWeightedEdge;
@@ -13,7 +16,8 @@ import it.polito.tdp.crimes.db.EventsDao;
 
 public class Model {
 
-	Graph<Integer, DefaultWeightedEdge> graph;
+	private Graph<Integer, DefaultWeightedEdge> graph;
+	private Simulator sim;
 
 	public List<Integer> getAnni() {
 		return EventsDao.getAnni();
@@ -38,6 +42,50 @@ public class Model {
 		}
 
 		System.out.println(true);
+	}
+
+	public Map<Integer, List<DistrictLength>> getConnections() {
+
+		Map<Integer, List<DistrictLength>> mappa = new HashMap<>();
+
+		for (Integer i : this.graph.vertexSet()) {
+			mappa.put(i, new ArrayList<DistrictLength>());
+			for (int j = 1; j < 8; j++) {
+				if (i != j) {
+					mappa.get(i).add(new DistrictLength(j, this.graph.getEdgeWeight(this.graph.getEdge(i, j))));
+				}
+			}
+			mappa.get(i).sort(null);
+		}
+
+		return mappa;
+	}
+
+	public List<Integer> getMesi(Integer year) {
+		return EventsDao.getMesi(year);
+	}
+
+	public List<Integer> getGiorni(Integer anno) {
+		return EventsDao.getGiorni(anno);
+	}
+
+	public boolean simula(Integer giorno, Integer mese, Integer anno, Integer agenti) {
+
+		sim = new Simulator();
+		sim.setNumeroAgenti(agenti);
+		List<Event> crimini = EventsDao.listEventsByDay(giorno, mese, anno);
+		if (crimini.size() == 0) {
+			return false;
+		}
+		Integer start = EventsDao.getDistrettoMigliore(anno);
+		this.sim.init(this.graph, crimini, start);
+		this.sim.run();
+		return true;
+
+	}
+
+	public Integer getMalGestiti() {
+		return sim.getMalGestiti();
 	}
 
 }

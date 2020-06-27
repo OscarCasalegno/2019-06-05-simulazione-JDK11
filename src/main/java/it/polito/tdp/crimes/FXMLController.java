@@ -5,8 +5,11 @@
 package it.polito.tdp.crimes;
 
 import java.net.URL;
+import java.util.List;
+import java.util.Map;
 import java.util.ResourceBundle;
 
+import it.polito.tdp.crimes.model.DistrictLength;
 import it.polito.tdp.crimes.model.Model;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -28,10 +31,10 @@ public class FXMLController {
 	private ComboBox<Integer> boxAnno; // Value injected by FXMLLoader
 
 	@FXML // fx:id="boxMese"
-	private ComboBox<?> boxMese; // Value injected by FXMLLoader
+	private ComboBox<Integer> boxMese; // Value injected by FXMLLoader
 
 	@FXML // fx:id="boxGiorno"
-	private ComboBox<?> boxGiorno; // Value injected by FXMLLoader
+	private ComboBox<Integer> boxGiorno; // Value injected by FXMLLoader
 
 	@FXML // fx:id="btnCreaReteCittadina"
 	private Button btnCreaReteCittadina; // Value injected by FXMLLoader
@@ -56,10 +59,53 @@ public class FXMLController {
 
 		this.model.createGraph(year);
 
+		Map<Integer, List<DistrictLength>> mappa = this.model.getConnections();
+
+		for (Integer i : mappa.keySet()) {
+			this.txtResult.appendText("Distretto " + i + ": \n");
+			for (DistrictLength d : mappa.get(i)) {
+				this.txtResult.appendText(d.toString() + "\n");
+			}
+			this.txtResult.appendText("\n");
+		}
+
+		this.boxMese.getItems().addAll(this.model.getMesi(year));
+		this.boxGiorno.getItems().addAll(this.model.getGiorni(year));
+
 	}
 
 	@FXML
 	void doSimula(ActionEvent event) {
+		this.txtResult.clear();
+
+		Integer anno = this.boxAnno.getValue();
+		Integer mese = this.boxMese.getValue();
+		Integer giorno = this.boxGiorno.getValue();
+		Integer agenti;
+
+		try {
+			agenti = Integer.parseInt(this.txtN.getText());
+		} catch (NumberFormatException e) {
+			this.txtResult.appendText("scrivi un numero da 1 a 10");
+			return;
+		}
+
+		if (agenti < 1 || agenti > 10) {
+			this.txtResult.appendText("scrivi un numero da 1 a 10");
+			return;
+		}
+
+		if (anno == null || mese == null || giorno == null) {
+			this.txtResult.appendText("scegli giorno, mese ed anno");
+			return;
+		}
+
+		if (this.model.simula(giorno, mese, anno, agenti)) {
+			this.txtResult.appendText(
+					"Numero di crimini mal gestiti con " + agenti + " agenti: " + this.model.getMalGestiti());
+		} else {
+			this.txtResult.appendText("Nessun reato quel giorno");
+		}
 
 	}
 
